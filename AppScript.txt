@@ -1,0 +1,43 @@
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({
+    success: true,
+    message: "Sheet is ready"
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  try {
+    // Get the active spreadsheet
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    
+    // Check if headers exist, if not add them
+    if (sheet.getRange("A1").getValue() === "") {
+      sheet.getRange("A1:B1").setValues([["Timestamp (IST)", "Barcode"]]);
+      sheet.getRange("A1:B1").setFontWeight("bold");
+    }
+    
+    // Parse the incoming data
+    var data = JSON.parse(e.postData.contents);
+    var barcode = data.barcode;
+    
+    // Get current timestamp in IST
+    var now = new Date();
+    var timestamp = Utilities.formatDate(now, "Asia/Kolkata", "yyyy-MM-dd HH:mm:ss");
+    
+    // Append the data to the sheet
+    sheet.appendRow([timestamp, barcode]);
+    
+    // Return success response
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      message: "Data appended successfully"
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch(error) {
+    // Return error response
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
